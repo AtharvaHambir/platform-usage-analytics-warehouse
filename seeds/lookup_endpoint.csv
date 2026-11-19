@@ -1,0 +1,6 @@
+endpoint_id,label
+0,/search
+1,/export
+2,/files
+3,/share
+4,/jobs

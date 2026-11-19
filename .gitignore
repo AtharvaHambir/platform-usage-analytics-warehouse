@@ -1,0 +1,23 @@
+# Local environments and account settings
+.env
+.venv/
+.airflow-env/
+.airflow-home/
+.dbt/
+
+# Generated local data and database
+data/
+warehouse.duckdb*
+scorecard.csv
+
+# Build artifacts, caches and logs
+target/
+target_snowflake/
+logs/
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Local Snowflake private key
+*.p8
+*.pem

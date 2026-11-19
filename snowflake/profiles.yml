@@ -1,0 +1,14 @@
+platform_usage:
+  target: snowflake
+  outputs:
+    snowflake:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: PLATFORM_USAGE_DBT_USER
+      private_key_path: "{{ env_var('PLATFORM_SNOWFLAKE_KEY') }}"
+      role: PLATFORM_USAGE_DBT_ROLE
+      database: PLATFORM_USAGE_LAB
+      warehouse: PLATFORM_USAGE_XS
+      schema: ANALYTICS
+      threads: 3
+      query_tag: platform_usage_portfolio

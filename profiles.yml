@@ -1,0 +1,7 @@
+platform_usage:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: warehouse.duckdb
+      threads: 2

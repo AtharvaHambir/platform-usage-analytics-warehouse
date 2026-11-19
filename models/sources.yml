@@ -1,0 +1,8 @@
+version: 2
+sources:
+  - name: landing
+    schema: landing
+    tables:
+      - name: api
+      - name: usage
+      - name: billing

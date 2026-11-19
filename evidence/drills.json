@@ -1,0 +1,9 @@
+{
+  "rows_committed_before_simulated_interruption": 144144,
+  "replay_compared_to_clean_load": "all three raw tables equal including duplicates",
+  "injected_error_cents": 100,
+  "failed_test": "test.platform_usage.source_billing_tieout",
+  "failed_currency_day_groups": 1,
+  "publication_blocked": true,
+  "full_rebuild_restored_identical_scorecard": true
+}

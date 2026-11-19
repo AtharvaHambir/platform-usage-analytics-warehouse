@@ -1,0 +1,109 @@
+{
+  "raw_deliveries": {
+    "api": 144144,
+    "usage": 84084,
+    "billing": 24024
+  },
+  "dbt_results": {
+    "seed.platform_usage.identity_map": "success",
+    "seed.platform_usage.lookup_currency": "success",
+    "seed.platform_usage.lookup_client": "success",
+    "seed.platform_usage.lookup_endpoint": "success",
+    "seed.platform_usage.lookup_feature": "success",
+    "seed.platform_usage.lookup_event_type": "success",
+    "seed.platform_usage.lookup_plan": "success",
+    "seed.platform_usage.lookup_status": "success",
+    "seed.platform_usage.plan_changes": "success",
+    "test.platform_usage.identity_map_grain": "pass",
+    "model.platform_usage.dim_client": "success",
+    "test.platform_usage.delivery_payload_consistency": "pass",
+    "model.platform_usage.dim_currency": "success",
+    "model.platform_usage.dim_endpoint": "success",
+    "model.platform_usage.dim_event_type": "success",
+    "model.platform_usage.dim_feature": "success",
+    "model.platform_usage.dim_plan": "success",
+    "model.platform_usage.dim_status": "success",
+    "model.platform_usage.dim_customer": "success",
+    "model.platform_usage.dim_account": "success",
+    "test.platform_usage.dim_customer_grain": "pass",
+    "model.platform_usage.dim_workspace": "success",
+    "test.platform_usage.no_plan_overlap": "pass",
+    "test.platform_usage.one_current_plan": "pass",
+    "model.platform_usage.stg_events": "success",
+    "model.platform_usage.dim_date": "success",
+    "model.platform_usage.int_resolved": "success",
+    "test.platform_usage.event_grain": "pass",
+    "test.platform_usage.valid_event_plan": "pass",
+    "model.platform_usage.dim_user": "success",
+    "model.platform_usage.fct_credit": "success",
+    "model.platform_usage.fct_api_request": "success",
+    "model.platform_usage.fct_payment": "success",
+    "model.platform_usage.fct_invoice": "success",
+    "test.platform_usage.credit_sign": "pass",
+    "model.platform_usage.fct_usage_event": "success",
+    "test.platform_usage.fct_credit_grain": "pass",
+    "test.platform_usage.fct_api_request_grain": "pass",
+    "model.platform_usage.unresolved_events": "success",
+    "test.platform_usage.valid_api_request_account_id": "pass",
+    "test.platform_usage.valid_api_request_client_id": "pass",
+    "test.platform_usage.valid_api_request_endpoint_id": "pass",
+    "test.platform_usage.valid_api_request_status": "pass",
+    "test.platform_usage.fct_payment_grain": "pass",
+    "test.platform_usage.fct_usage_event_grain": "pass",
+    "test.platform_usage.valid_invoice_currency": "pass",
+    "test.platform_usage.fct_invoice_grain": "pass",
+    "test.platform_usage.valid_usage_event_user_id": "pass",
+    "test.platform_usage.valid_usage_event_feature_id": "pass",
+    "test.platform_usage.valid_usage_quantity": "pass",
+    "test.platform_usage.valid_usage_event_workspace_id": "pass",
+    "test.platform_usage.unmapped_fixture": "pass",
+    "model.platform_usage.fct_daily_billing": "success",
+    "model.platform_usage.fct_daily_usage": "success",
+    "test.platform_usage.raw_to_fact_counts": "pass",
+    "test.platform_usage.fct_daily_billing_grain": "pass",
+    "test.platform_usage.fct_daily_usage_grain": "pass",
+    "test.platform_usage.source_billing_tieout": "pass",
+    "model.platform_usage.fct_session": "success",
+    "test.platform_usage.usage_rollup_tieout": "pass",
+    "test.platform_usage.fct_session_grain": "pass"
+  },
+  "scorecard": [
+    [
+      "Finance",
+      "Net billed including credits",
+      "EUR",
+      "33960.000000"
+    ],
+    [
+      "Finance",
+      "Net billed including credits",
+      "USD",
+      "34000.000000"
+    ],
+    [
+      "Operations",
+      "API request attempts",
+      "requests",
+      "144000.000000"
+    ],
+    [
+      "Operations",
+      "API success rate",
+      "percent",
+      "97.870000"
+    ],
+    [
+      "Product",
+      "Usage events awaiting identity mapping",
+      "events",
+      "30.000000"
+    ],
+    [
+      "Product",
+      "Usage units from matched workspaces",
+      "units",
+      "335970.000000"
+    ]
+  ],
+  "scorecard_query_id": "01c884c5-3205-2ad4-0000-00084f9e70fd"
+}

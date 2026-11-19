@@ -1,0 +1,7 @@
+name: platform_usage
+version: '1.0'
+config-version: 2
+profile: platform_usage
+models:
+  platform_usage:
+    +materialized: table
