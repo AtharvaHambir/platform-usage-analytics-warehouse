@@ -77,71 +77,35 @@ SELECT * FROM PLATFORM_USAGE_LAB.ANALYTICS.PLATFORM_SCORECARD
 ORDER BY team, metric, unit;
 ```
 
-## Seven interview answers from this build
+## Project design
 
-### 1. What does 250K mean?
+The warehouse combines three data domains that teams often analyze separately: API request activity, product feature usage, and billing events. It gives Product, Operations, and Finance a shared customer identity and consistent analytical tables for adoption, service health, invoices, payments, and credits.
 
-| Source | Raw deliveries | Distinct source events | Accepted atomic facts |
-|---|---:|---:|---:|
-| API | 144,144 | 144,000 | 144,000 |
-| Usage | 84,084 | 84,000 | 83,970 |
-| Billing | 24,024 | 24,000 | 24,000 |
-| **Combined** | **252,252** | **252,000** | **251,970** |
+The synthetic dataset covers November 1–30, 2025. It contains 252,252 raw deliveries representing 252,000 distinct source events. Each source includes a small number of duplicate deliveries to exercise deduplication. Thirty usage events use an unmapped workspace identifier and are retained in an exception model for visibility.
 
-The number refers to raw deliveries across three files over the full 30 days, before deduplication. The generator delivers every thousandth event twice, starting with event zero. One usage event per day has an unmapped workspace. Those 30 distinct events remain available in unresolved_events. Counting session or daily facts again would count summaries of the same activity.
+### Data model
 
-### 2. Why eight facts?
+The project contains eight fact tables for request attempts, usage events, invoices, payments, credits, sessions, daily usage, and daily billing. Each fact has an explicit grain so that metrics from different processes are not accidentally multiplied by joins. Twelve dimensions describe customers, accounts, workspaces, users, dates, plans, features, API endpoints, clients, statuses, event types, and currencies.
 
-| Table | Grain and key | Business question |
-|---|---|---|
-| fct_api_request | One request attempt, event_id | Which endpoints have errors or slow responses? |
-| fct_usage_event | One matched feature event, event_id | How many units of a feature were consumed? |
-| fct_invoice | One issued invoice event, event_id | How much did we invoice? |
-| fct_payment | One received payment event, event_id | How much cash was collected? |
-| fct_credit | One issued credit, event_id | How much reduced the amount billed? |
-| fct_session | One source-defined session, session_id | How many events and units occurred in a session? |
-| fct_daily_usage | One customer version, date and feature | What was daily feature adoption? |
-| fct_daily_billing | One customer version, date and currency with billing activity | How much did we bill after credits? |
+Customer identity is resolved through a source-specific crosswalk. The model joins using both source system and external identifier, then links events to the customer version valid on the event date. The customer dimension uses Type 2 history to retain plan changes over time. Unmatched events remain queryable in an exception model.
 
-The billing fixture uses one event per invoice, payment or credit. It does not model invoice lines or payment allocation. Net billed is invoices plus signed credits. Including payments would mix billing and collection. Before comparing usage and billing, aggregate each to a common customer and reporting period. Joining each event directly would multiply amounts.
+### Data quality and reliability
 
-### 3. Why twelve dimensions?
+The dbt project includes 29 data tests for event uniqueness, fact grain, dimension relationships, valid values, historical ranges, source-to-model counts, and billing and usage reconciliations. A failure drill injects a billing discrepancy and demonstrates that reconciliation detects the error and blocks scorecard publication.
 
-| Dimension | Key | Use |
-|---|---|---|
-| dim_customer | customer_sk per version, customer_id across versions | Attribute events to the right customer and historical plan |
-| dim_account | account_id | Resolve the API account to its customer |
-| dim_workspace | workspace_id | Resolve the product workspace to its customer |
-| dim_user | user_id | Link a product user to a workspace |
-| dim_date | event_date | Group dates by weekday |
-| dim_plan | plan_id | Label the subscription tier |
-| dim_feature | feature_id | Group usage by product feature |
-| dim_endpoint | endpoint_id | Group requests by API route |
-| dim_client | client_id | Compare browser, SDK and mobile traffic |
-| dim_status | status | Label request outcomes |
-| dim_event_type | kind | Explain event categories consistently |
-| dim_currency | currency | Label and separate monetary units |
+The local loader replaces each source landing table from a complete snapshot. Replaying a partial load produces the same landing data as a clean load, including duplicate deliveries. The Snowflake loader stages each CSV, copies it into a temporary table, checks row counts, then replaces the corresponding landing table.
 
-The fixture has one account, workspace, and billing ID per customer. The model keeps source keys distinct so the reporting joins are explicit. Lookup tables such as status are small teaching examples. An inline label could work at this scale.
+### Results
 
-### 4. What did SCD Type 2 preserve?
+| Metric | Result |
+|---|---:|
+| Raw deliveries processed | 252,252 |
+| Distinct source events | 252,000 |
+| API request attempts | 144,000 |
+| API success rate | 97.87% |
+| Unmapped usage events retained for review | 30 |
+| dbt data tests passed | 29 |
 
-Only the customer's plan tier changes in this build. The source supplies effective dates. dim_customer orders the changes for each customer and uses LEAD to find the end of each version. An event matches when its day is on or after the start and strictly before the end, or the end is open. Of 200 customers, 100 upgrade on November 16, yielding 300 dimension rows. A November 15 event retains Basic. A November 16 event uses Pro. The SQL uses day precision, so intraday changes require a timestamp version of the model. A historical correction supplied in the change log is reapplied when the full refresh rebuilds the facts.
+The project runs locally with DuckDB and has also been deployed to Snowflake. Airflow orchestrates the local workflow. Python handles source loading to Snowflake and invokes the dbt build. The scorecard query reports monetary values by currency to avoid combining unlike units.
 
-### 5. How did identity resolution work?
-
-The project generates an authoritative mapping of 600 source IDs to 200 customers. For example, API A0, usage W0 and billing B0 map to customer 0. The join uses both source name and source ID. W-unmapped has no entry. Its 30 events are kept in unresolved_events and excluded from customer-level usage metrics. The scorecard reports that coverage gap. This is a deterministic lookup, and its correctness depends on the supplied crosswalk.
-
-### 6. What did the quality checks catch?
-
-The tests directory contains all 29 executable queries. evidence/run.json lists the individual results. Checks include event keys, fact grains, dimension relationships, historical overlap, one open customer version, usage quantity, credit sign, source-to-fact counts and grouped reconciliations. The fixture-specific check expects exactly 30 unresolved usage events. A production pipeline would use an agreed tolerance and track individual exceptions.
-
-In a fault drill, drills.py added 100 cents to one customer/day/currency billing summary in a temporary database. Counts and keys still looked correct. The independent reconciliation rebuilt expected amounts from raw invoice and credit records and returned one failing date/currency group. The publisher rejected that test run. A complete rebuild restored the original scorecard. This was a deliberately injected defect.
-
-### 7. What happens on a retry?
-
-Each input is a complete immutable historical snapshot. The loader atomically replaces each source table, so rerunning one or all three sources yields the same raw rows. A drill committed only the API snapshot, replayed all three sources, and compared every row in both directions with a clean build, including duplicate multiplicities. All three matched. The monthly batch is small enough for a full refresh. A stream of partial daily files would need another loading strategy such as interval replacement or a keyed merge.
-
-## Evidence and scope
-
-The four tasks were executed locally using Airflow's DAG test command. The dbt build ran 9 seeds, 23 table models and 29 tests. The 23 models are 12 dimensions, 8 facts and 3 intermediate/exception tables. evidence/run.json records the task states, model counts and test results. evidence/drills.json records both drill outcomes. The simulated business metrics describe this generated dataset only.
+This is a portfolio implementation over deterministic synthetic data. Its counts and metrics describe the generated fixture.
