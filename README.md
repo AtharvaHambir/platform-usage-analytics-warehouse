@@ -10,7 +10,6 @@ Built with **Python · DuckDB · dbt · Airflow · Snowflake**.
 |---|---:|---:|---:|---:|
 | Synthetic platform activity | **252,252** | **252,000** | **8 facts · 12 dimensions** | **29 dbt tests** |
 
-> The counts and results below come from deterministic synthetic data. They describe this portfolio fixture, not a production platform.
 
 ## See the project in action
 
